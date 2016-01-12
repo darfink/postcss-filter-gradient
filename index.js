@@ -188,37 +188,37 @@ module.exports = postcss.plugin('postcss-filter-gradient', function (opts) {
 
     return function (root, result) {
         root.walkRules(function (rule) {
-            var gradient;
+            var gradient = getGradientFromRule(rule);
             var filter;
 
-            if (!hasFilter(rule)) {
-                gradient = getGradientFromRule(rule);
+            if (!gradient.value) {
+                return;
+            }
 
+            if (!hasFilter(rule)) {
                 if (gradient.warnings) {
                     gradient.decl.warn(result, gradient.warnings);
                 }
 
-                if (gradient.value) {
-                    filter = gradientToFilter(gradient.value);
+                filter = gradientToFilter(gradient.value);
 
-                    if (opts.skipMultiColor && filter.isMultiColor) {
-                        return;
-                    }
-
-                    if (!opts.angleFallback && filter.isFallback) {
-                        return;
-                    }
-
-                    // fallback, should warns developer
-                    if (filter.isFallback) {
-                        gradient.decl.warn(result, filter.message);
-                    }
-
-                    // append filter string
-                    gradient.decl.cloneAfter({
-                        prop: 'filter', value: filter.string
-                    });
+                if (opts.skipMultiColor && filter.isMultiColor) {
+                    return;
                 }
+
+                if (!opts.angleFallback && filter.isFallback) {
+                    return;
+                }
+
+                // fallback, should warns developer
+                if (filter.isFallback) {
+                    gradient.decl.warn(result, filter.message);
+                }
+
+                // append filter string
+                gradient.decl.cloneAfter({
+                    prop: 'filter', value: filter.string
+                });
             } else {
                 rule.warn(
                     result,
